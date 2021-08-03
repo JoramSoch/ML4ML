@@ -29,6 +29,26 @@ To directly apply SVC or SVR to neuroimaging data (i.e. scans), use the function
 
 ## Documentation
 
+### Cross-validation folds
+
+```matlab
+function CV = ML_CV(c, k, mode)
+% _
+% Cross-Validation Folds for Machine Learning Analysis
+% FORMAT CV = ML_CV(c, k, mode)
+% 
+%     c    - an n x 1 vector of class labels (1, 2, 3 etc.)
+%     k    - an integer larger than 1, the number of CV folds
+%     mode - a string indicating the cross-validation mode
+%            o 'kf'   - k-folds cross-validation across all points
+%            o 'kfc'  - k-folds cross-validation on points per class
+%            o 'loo'  - leave-one-out cross-validation across all points
+%            o 'looc' - leave-one-out cross-validation on points per class
+% 
+%     CV   - an n x k matrix indicating training (1) and test (2)
+%            data for each cross-validation fold
+```
+
 ### Support vector classification
 
 ```matlab
