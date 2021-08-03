@@ -9,8 +9,8 @@ _A MATLAB Wrapper for Machine Learning, with another wrapper for neuroimaging da
 
 These functions require the following packages:
 
-* [LibSVM](https://www.csie.ntu.edu.tw/~cjlin/libsvm/) (for "ML_SVM.C" and "ML_SVR.m") for MATLAB
-* [SPM](https://www.fil.ion.ucl.ac.uk/spm/software/spm12/) (for "ML4NI_SVM.m" and "ML4NI_mask.m"), preferably [SPM12](https://www.fil.ion.ucl.ac.uk/spm/software/download/).
+* [LibSVM](https://www.csie.ntu.edu.tw/~cjlin/libsvm/) (for `ML_SVC` and `ML_SVR`) for MATLAB
+* [SPM](https://www.fil.ion.ucl.ac.uk/spm/software/spm12/) (for `ML4NI_SVM` and `ML4NI_mask`), preferably [SPM12](https://github.com/spm/spm12).
 
 
 ## Getting Started
@@ -19,11 +19,12 @@ To get started, have a look at the demo scripts "[ML_demo.m](https://github.com/
 
 Generally, an analysis proceeds in two steps: Given features `Y`, classes `x` or targets `x`,
 
-1. create a cross-validation (CV) matrix by calling `CV = ML_CV(x, k, mode)` where `k` is the number of cross-validation folds and `mode` is the desired cross-validation strategy (type `help ML_CV` for more info). <br>
-2. a) perform support vector classification (SVC) by calling `SVC = ML_SVC(x, Y, CV, C)` where `C` is the SVM cost parameter **OR** <br>
-   b) perform support vector regression (SVR) by calling `SVR = ML_SVR(x, Y, CV, C)` where `C` is the SVM cost parameter.
+1. create a cross-validation (CV) matrix by calling `CV = ML_CV(x, k, mode)` where `k` is the number of cross-validation folds and `mode` is the desired cross-validation strategy (type `help ML_CV` for more info); **AND** <br>
+2. a) perform support vector classification (SVC) by calling `SVC = ML_SVC(x, Y, CV, C)` **OR** <br>
+   b) perform support vector regression (SVR) by calling `SVR = ML_SVR(x, Y, CV, C)` <br>
+      where `C` is the SVM cost parameter and `CV` is the cross-validation matrix.
 
-To directly apply SVC or SVR to neuroimaging data (i.e. scans), use "ML4NI_SVM.m" (type `help ML4NI_SVM` for more info).
+To directly apply SVC or SVR to neuroimaging data (i.e. scans), use the function "[ML4NI_SVM.m](https://github.com/JoramSoch/ML4ML/blob/main/ML4NI_SVM.m)" (type `help ML4NI_SVM` for more info or [see below](https://github.com/JoramSoch/ML4ML#support-vector-machines-for-neuroimaging-data)).
 
 
 ## Documentation
