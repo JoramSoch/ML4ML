@@ -24,7 +24,7 @@ function [m_img, m_hdr, m_ind] = ML4NI_mask(Y, H)
 % E-Mail: Joram.Soch@DZNE.de
 % 
 % First edit: 09/12/2014, 13:40
-%  Last edit: 27/07/2021, 09:03
+%  Last edit: 09/08/2021, 23:54
 
 
 % Init progress bar
@@ -33,7 +33,13 @@ Finter = spm('FigName','ML4NI_mask: create');
 
 % Create mask image
 %-------------------------------------------------------------------------%
-m_img = double(~sign(sum(isnan(Y),1)));
+if any(sum(isnan(Y),1))         % find voxels where all images are non-NaN
+    m_img = double(~sign(sum(isnan(Y),1)));
+elseif any(sum(Y==0,1))         % find voxels where all images are non-zero
+    m_img = double(~sign(sum(Y==0,1)));
+else                            % otherwise, the mask consists of all voxels
+    m_img = ones(1,size(Y,2));
+end;
 m_ind = find(m_img~=0);
 m_hdr = H;
 
