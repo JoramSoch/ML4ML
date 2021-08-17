@@ -11,6 +11,7 @@ function SVR = ML_SVR(x, Y, CV, C)
 %     SVR - a structure specifying the calibrated SVM
 %           o data - the data for the SVM (x, Y)
 %           o pars - parameters of the SVM (CV, C)
+%                    o opt   - options for LibSVM's svmtrain
 %           o pred - predictions of the SVM
 %                    o xt    - an n x 1 vector of true target values
 %                    o xp    - an n x 1 vector of predicted target values
@@ -38,14 +39,13 @@ function SVR = ML_SVR(x, Y, CV, C)
 % E-Mail: Joram.Soch@DZNE.de
 % 
 % First edit: 06/07/2021, 14:51
-%  Last edit: 03/08/2021, 11:13
+%  Last edit: 17/08/2021, 17:52
 
 
 % Set defaults values
 %-------------------------------------------------------------------------%
-if nargin < 3 || isempty(CV)
-    CV = ML_CV(numel(x), 10, 'kfc');
-end;
+if nargin < 3 || isempty(CV), CV = ML_CV(numel(x), 10, 'kf'); end;
+if nargin < 4 || isempty(C),  C  = 1; end;
 
 % Get machine dimensions
 %-------------------------------------------------------------------------%
@@ -83,12 +83,12 @@ for g = 1:k                     % LibSVM options
     xt(i2) = x2;
     fprintf('successful!\n');
 end;
-clear i1 i2 svm1
+clear i1 i2 x1 x2 Y1 Y2 svm1
 fprintf('\n');
 
 % Calculate performance
 %-------------------------------------------------------------------------%
-xp_nn = xp(~isnan(xt),:);       % remove missing data points
+xp_nn = xp(~isnan(xt));         % remove missing data points
 xt_nn = xt(~isnan(xt));
 [a, b, c, d] = corrcoef(xp_nn, xt_nn, 'Alpha', 0.1);
 r     =  a(1,2);                % predictive correlation
@@ -106,7 +106,7 @@ SVR.data.x     = x;
 SVR.data.Y     = Y;
 SVR.pars.CV    = CV;
 SVR.pars.C     = C;
-SVR.pars.opt   = opt;           % options for LibSVM's svmtrain
+SVR.pars.opt   = opt;
 SVR.pred.xt    = xt;
 SVR.pred.xp    = xp;
 SVR.pred.xt_nn = xt_nn;
