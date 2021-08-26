@@ -110,9 +110,9 @@ BA = mean(CA);                  % balanced accuracy
 [ph, ci1] = binofit(uint16(round(DA*sum(n_nz))), sum(n_nz), 0.1);
 [ph, ci2] = binofit(uint16(floor(BA*sum(n_nz))), sum(n_nz), 0.1);
 [ph, ci3] = binofit(uint16(round(CA.*n_nz)),     n_nz,      0.1);
-DA_CI = ci1';                   % confidence intervals
-BA_CI = ci2';
-CA_CI = ci3';
+DA_CI = ci1;                   % confidence intervals
+BA_CI = ci2;
+CA_CI = ci3;
 clear ph ci1 ci2 ci3
 
 % Assemble SVC structure
