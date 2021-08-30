@@ -46,7 +46,7 @@ function SVR = ML_SVR_ext(x, Y, CV, C, perm)
 % E-Mail: Joram.Soch@DZNE.de
 % 
 % First edit: 06/07/2021, 14:51
-%  Last edit: 25/08/2021, 12:33
+%  Last edit: 30/08/2021, 11:50
 
 
 % Set defaults values
@@ -87,22 +87,22 @@ end;
 xt = zeros(n,perm);             % "true" targets
 xp = zeros(n,perm);             % predicted targets
 opt= sprintf('-s 4 -t 0 -c %s -q', num2str(C));
-for j = 1:perm                  % LibSVM options
-    fprintf('   - permutation %d: CV fold ', j);
-    % permute cross-validation matrix
-    CV_j = CV(ip(:,j),:);
-    % perform cross-validation
-    for g = 1:k
-        fprintf('%d, ', g);
-        % get test and training indices
-        i1 = find(CV_j(:,g)==1);
-        i2 = find(CV_j(:,g)==2);
-        % get test and training targets
-        x1 = x(ip(i1,j));
-        x2 = x(ip(i2,j));
+for g = 1:k                     % LibSVM options
+    fprintf('   - CV fold %d: permutation ', g);
+    % get test and training indices
+    i1 = find(CV(:,g)==1);
+    i2 = find(CV(:,g)==2);
+    % get test and training targets
+    x1 = x(i1);
+    x2 = x(i2);
+    % analyze permuted data
+    for j = 1:perm
+        if j == 1 || mod(j,floor(perm/10)) == 0 || j == perm
+            fprintf('%d, ', j);
+        end;
         % get test and training data
-        Y1 = Y(i1,:);
-        Y2 = Y(i2,:);
+        Y1 = Y(ip(i1,j),:);
+        Y2 = Y(ip(i2,j),:);
         % train and test using SVC
         svm1     = svmtrain(x1, Y1, opt);
         xp(i2,j) = svmpredict(x2, Y2, svm1, '-q');
@@ -110,7 +110,7 @@ for j = 1:perm                  % LibSVM options
     end;
     fprintf('done.\n');
 end;
-clear CV_j i1 i2 x1 x2 Y1 Y2 svm1
+clear i1 i2 x1 x2 Y1 Y2 svm1
 fprintf('\n');
 
 % Calculate performance

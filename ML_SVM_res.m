@@ -11,7 +11,7 @@ function ML_SVM_res(SVM, type)
 % E-Mail: Joram.Soch@DZNE.de
 % 
 % First edit: 25/08/2021, 13:04
-%  Last edit: 25/08/2021, 20:21
+%  Last edit: 30/08/2021, 12:45
 
 
 % Get SVM.mat if necessary
@@ -26,8 +26,9 @@ end;
 % Select type of display
 %-------------------------------------------------------------------------%
 if nargin < 2 || isempty(type)
+    types = {'input data', 'SVM parameters', 'SVM predictions', 'predictive performance'};
+    ind   = spm_input('Select type of results display', 1, 'm', types, [1:numel(types)]);
     types = {'data', 'pars', 'pred', 'perf'};
-    ind   = spm_select('Select type of results display', 1, 'm', types, [1:numel(types)]);
     type  = types{ind};
 end;
 clear ind
@@ -86,10 +87,8 @@ if strcmp(type,'pars')
     ylabel('cross-validation set (1 = training, 2 = test)', 'FontSize', 16);
     if SVC, xlabel(sprintf('cross-validation fold (linear SVC, k = %d, C = %g)', k, SVM.pars.C), 'FontSize', 16);
     else,   xlabel(sprintf('cross-validation fold (linear SVR, k = %d, C = %g)', k, SVM.pars.C), 'FontSize', 16); end;
-    if subs==0, title(sprintf('%d x %d cross-validation matrix (permutation 1 out of %d)', ...
-                      size(CV,1), size(CV,2), perm), 'FontSize' ,16);
-    else,       title(sprintf('%d x %d cross-validation matrix (subsample 1 out of %d, permutation 1 out of %d)', ...
-                      size(CV,1), size(CV,2), subs, perm), 'FontSize' ,16); end;
+    if subs==0, title(sprintf('%d x %d cross-validation matrix', n, k), 'FontSize' ,16);
+    else,       title(sprintf('%d x %d cross-validation matrix (subsample 1 out of %d)', size(CV,1), k, subs), 'FontSize' ,16); end;
 end;
 
 % Type == 'pred'
@@ -97,7 +96,7 @@ end;
 if strcmp(type,'pred')
     figure('Name', 'SVM: predictions', 'Color', [1 1 1], 'Position', [50 50 1600 900]);
     % subsamples
-    if SVC
+    if subs > 0
         subplot(2,2,1);
         is = SVM.pred.is;
         ns = min([10, size(is,2)]);
@@ -106,19 +105,21 @@ if strcmp(type,'pred')
         colorbar;
         xlabel('subsample', 'FontSize', 12);
         ylabel('data point', 'FontSize', 12);
-        title(sprintf('Subsamples (1-%d out of %d)', ns, subs), 'FontSize', 16);
+        title(sprintf('subsamples (1-%d out of %d)', ns, subs), 'FontSize', 16);
     end;
     % permutations
-    subplot(2,2,3);
-    ip = SVM.pred.ip(:,:,1);
-    np = min([10, size(ip,2)]);
-    imagesc(ip(:,1:np));
-    caxis([1 n]);
-    colorbar;
-    if subs==0, xlabel('permutation', 'FontSize', 12);
-    else,       xlabel('permutation (subsample 1)', 'FontSize', 12); end;
-    ylabel('data point', 'FontSize', 12);
-    title(sprintf('Permutations (1-%d out of %d)', np, perm), 'FontSize', 16);
+    if perm > 1
+        subplot(2,2,3);
+        ip = SVM.pred.ip(:,:,1);
+        np = min([10, size(ip,2)]);
+        imagesc(ip(:,1:np));
+        caxis([1 n]);
+        colorbar;
+        if subs==0, xlabel('permutation', 'FontSize', 12);
+        else,       xlabel('permutation (subsample 1)', 'FontSize', 12); end;
+        ylabel('data point', 'FontSize', 12);
+        title(sprintf('permutations (1-%d out of %d)', np, perm), 'FontSize', 16);
+    end;
     % true labels
     subplot(2,2,2);
     xt = SVM.pred.xt(:,:,1);

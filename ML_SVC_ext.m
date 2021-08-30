@@ -61,7 +61,7 @@ function SVC = ML_SVC_ext(x, Y, CV, C, perm, subs)
 % E-Mail: Joram.Soch@DZNE.de
 % 
 % First edit: 06/07/2021, 14:27
-%  Last edit: 25/08/2021, 13:04
+%  Last edit: 30/08/2021, 12:50
 
 
 % Set defaults values
@@ -145,10 +145,12 @@ end;
 % Prepare cross-validation
 %-------------------------------------------------------------------------%
 if subs == 0
-    subs = 1;
+    subs    = 1;
+    subsamp = false;
 else
+    subsamp = true;
     CV_orig = CV;
-    CV = zeros(m*spC,k,subs);
+    CV      = zeros(m*spC,k,subs);
 end;
 
 % Cross-validated prediction
@@ -158,36 +160,31 @@ xp = zeros(size(ip));           % predicted classes
 opt= sprintf('-s 0 -t 0 -c %s -q', num2str(C));
 for i = 1:subs                  % LibSVM options
     % obtain new CV matrix
-    if size(xp,1) < n
+    if subsamp
+        fprintf('   - subsample %d:\n', i);
         CV(:,:,i) = ML_CV(x(is(:,i)), k, 'kfc');
         % alternatively, use subsample-compliant
         % subset of originally given CV matrix:
         % CV(:,:,i) = CV_orig(is(:,i),:);
     end;
-    % analyze permuted data
-    for j = 1:perm
-        if size(xp,1) < n
-            fprintf('   - subsample %d, permutation %d: CV fold ', i, j);
-        else
-            fprintf('   - permutation %d: CV fold ', j);
-        end;
-        % permute cross-validation matrix
-        CV_ij = zeros(size(CV(:,:,1)));
-        for l = 1:size(ip,1)
-            CV_ij(l,:) = CV(ip(:,1,i)==ip(l,j,i),:,i);
-        end;
-        % perform cross-validation
-        for g = 1:k
-            fprintf('%d, ', g);
-            % get test and training indices
-            i1 = find(CV_ij(:,g)==1);
-            i2 = find(CV_ij(:,g)==2);
-            % get test and training classes
-            x1 = x(ip(i1,j,i));
-            x2 = x(ip(i2,j,i));
+    % perform cross-validation
+    for g = 1:k
+        if subsamp, fprintf('  '); end;
+        fprintf('   - CV fold %d: permutation ', g);
+        % get test and training indices
+        i1 = find(CV(:,g,i)==1);
+        i2 = find(CV(:,g,i)==2);
+        % get test and training targets
+        x1 = x(is(i1,i));
+        x2 = x(is(i2,i));
+        % analyze permuted data
+        for j = 1:perm
+            if j == 1 || mod(j,floor(perm/10)) == 0 || j == perm
+                fprintf('%d, ', j);
+            end;
             % get test and training data
-            Y1 = Y(is(i1,i),:);
-            Y2 = Y(is(i2,i),:);
+            Y1 = Y(ip(i1,j,i),:);
+            Y2 = Y(ip(i2,j,i),:);
             % train and test using SVC
             svm1       = svmtrain(x1, Y1, opt);
             xp(i2,j,i) = svmpredict(x2, Y2, svm1, '-q');
@@ -196,14 +193,14 @@ for i = 1:subs                  % LibSVM options
         fprintf('done.\n');
     end;
 end;
-clear CV_ij i1 i2 x1 x2 Y1 Y2 svm1
+clear i1 i2 x1 x2 Y1 Y2 svm1
 fprintf('\n');
 
 % Calculate performance
 %-------------------------------------------------------------------------%
 ne = size(xp,1);                % effective number of data points
-if size(xp,1) == n, nc = N';    % number of data points per class
-else, nc = spC*ones(m,1); end;
+if ~subsamp, nc = N';           % number of data points per class
+else,        nc = spC*ones(m,1); end;
 DA    = zeros(1,perm,subs);
 BA    = zeros(1,perm,subs);
 CA    = zeros(m,perm,subs);
@@ -242,7 +239,7 @@ SVC.pars.CV    = CV;
 SVC.pars.C     = C;
 SVC.pars.opt   = opt;
 SVC.pars.perm  = perm;
-SVC.pars.subs  = (size(xp,1)==n)*0 + (size(xp,1)<n)*subs;
+SVC.pars.subs  = (~subsamp)*0 + (subsamp)*subs;
 SVC.pred.is    = is;
 SVC.pred.ip    = ip;
 SVC.pred.xt    = xt;
