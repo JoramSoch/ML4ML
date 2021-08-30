@@ -10,7 +10,7 @@
 % E-Mail: Joram.Soch@DZNE.de
 % 
 % First edit: 03/08/2021, 12:03
-%  Last edit: 03/08/2021, 12:03
+%  Last edit: 30/08/2021, 16:09
 
 
 clear
@@ -22,8 +22,10 @@ N = 200;            % number of data points
 q = 3;              % number of classes
 
 % specify options
-k = 10;             % number of cross-validation folds
-C = 1;              % hyper-parameter for SVM calibration
+k    = 10;          % number of cross-validation folds
+C    = 1;           % hyper-parameter for SVM calibration
+perm = 100;         % number of permutations
+subs = 0;           % number of subsamples
 
 
 %%% Step 1: specify analysis parameters %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -61,9 +63,11 @@ preproc(2).cov = [1:5];
 
 % specify SVM analysis
 options.SVM_type = 'SVC';
-options.C        = 1;
+options.C        = C;
 options.CV_mode  = 'kfc';
-options.k        = 10;
+options.k        = k;
+options.perm     = perm;
+options.subs     = subs;
 
 % perform SVM analysis
 ML4NI_SVM(SVM_dir, mask_img, data_imgs, c, [], X, preproc, options)
@@ -85,9 +89,9 @@ preproc(5).cov = [];
 
 % specify SVM analysis
 options.SVM_type = 'SVR';
-options.C        = 1;
+options.C        = C;
 options.CV_mode  = 'kf';
-options.k        = 10;
+options.k        = k;
 
 % perform SVM analysis
 ML4NI_SVM(SVM_dir, mask_img, data_imgs, c, x, X, preproc, options)

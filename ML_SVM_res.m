@@ -7,11 +7,20 @@ function ML_SVM_res(SVM, type)
 % 
 % FORMAT ML_SVM_res(SVM, type) displays results upon SVM analysis.
 % 
+% FORMAT ML_SVM_res; uses "spm_select" to choose a saved SVM.mat and
+% uses "spm_input" to select the type of results display.
+% 
+% The input variable "data" has to be one out of four strings:
+% - 'data': displays class labels/target values and feature matrix;
+% - 'pars': displays cross-validation structure and hyper-parameter value;
+% - 'pred': displays true and predicted class labels/target values;
+% - 'perf': displays predictive performance and permutation distribution.
+% 
 % Author: Joram Soch, DZNE Göttingen
 % E-Mail: Joram.Soch@DZNE.de
 % 
 % First edit: 25/08/2021, 13:04
-%  Last edit: 30/08/2021, 12:45
+%  Last edit: 30/08/2021, 15:46
 
 
 % Get SVM.mat if necessary
