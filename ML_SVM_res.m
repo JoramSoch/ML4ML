@@ -20,7 +20,7 @@ function ML_SVM_res(SVM, type)
 % E-Mail: Joram.Soch@DZNE.de
 % 
 % First edit: 25/08/2021, 13:04
-%  Last edit: 30/08/2021, 15:46
+%  Last edit: 06/10/2021, 10:33
 
 
 % Get SVM.mat if necessary
@@ -177,11 +177,20 @@ if strcmp(type,'perf')
         subplot(2,2,1); hold on;
         Acc = [mean(SVM.perf.DA(1,1,:),3), mean(SVM.perf.BA(1,1,:),3), mean(SVM.perf.CA(:,1,:),3)'];
         CIs = [mean(SVM.perf.DA_CI,3)',    mean(SVM.perf.BA_CI,3)',    mean(SVM.perf.CA_CI,3)'];
+        Accs= [reshape(SVM.perf.DA(1,1,:),[size(SVM.perf.DA,3) 1]), ...
+               reshape(SVM.perf.BA(1,1,:),[size(SVM.perf.BA,3) 1]), ...
+               reshape(SVM.perf.CA(:,1,:),[SVM.data.m, size(SVM.perf.CA,3)])'];
         bar(1, Acc(1), 'r');
         bar(2, Acc(2), 'g');
         bar([3:numel(Acc)], Acc(3:end), 'b');
         errorbar([1:numel(Acc)], Acc, Acc-CIs(1,:), CIs(2,:)-Acc, '.k', 'LineWidth', 2, 'CapSize', 20);
         plot([0, numel(Acc)+1], [1/SVM.data.m, 1/SVM.data.m], ':k', 'LineWidth', 2);
+        if subs > 0
+            rng(size(Accs,1));
+            for h = 1:size(Accs,2)
+                plot(h+3/4*(rand(size(Accs,1),1)-1/2), Accs(:,h), '.k', 'LineWidth', 2, 'MarkerSize', 10);
+            end;
+        end;
         axis([0, numel(Acc)+1, 0, 1]);
         set(gca,'Box','On');
         set(gca,'XTick',[1:numel(Acc)],'XTickLabel',[{'DA', 'BA'}, cellstr(num2str([1:SVM.data.m]'))']);
@@ -195,6 +204,7 @@ if strcmp(type,'perf')
         imagesc(CM);
         caxis([0 1]);
         colorbar;
+        axis xy;
         set(gca,'XTick',[1:SVM.data.m]);
         set(gca,'YTick',[1:SVM.data.m]);
         xlabel('true class', 'FontSize', 12);
@@ -207,39 +217,43 @@ if strcmp(type,'perf')
         end;
         % permutation testing (DA)
         subplot(2,2,2); hold on;
-        DAs = mean(SVM.perf.DA(1,:,:),3);
+        DAs = reshape(SVM.perf.DA(1,:,:),[1 size(SVM.perf.DA,3)*perm]);
+        DA1 = reshape(SVM.perf.DA(1,1,:),[1 size(SVM.perf.DA,3)]);
         dx  = 0.01;
         x   = [(0+dx/2):dx:(1-dx/2)];
         n   = hist(DAs, x);
+        if subs > 0, n = n./subs; end;
         bar(x, n, 'b');
-        plot(Acc(1), 0, 'xr', 'LineWidth', 2, 'MarkerSize', 10);
+        plot(DA1, 0, 'xr', 'LineWidth', 2, 'MarkerSize', 10);
         axis([0, 1, 0, (11/10)*max(n)]);
-        if SVM.perf.DA_pp < 0.001
-            text(0.95, (21/20)*max(n), 'p < 0.001', 'HorizontalAlignment', 'Right', 'VerticalAlignment', 'Middle');
+        if mean(SVM.perf.DA_pp) < 0.001
+            text(0.95, (21/20)*max(n), 'mean p < 0.001', 'HorizontalAlignment', 'Right', 'VerticalAlignment', 'Middle');
         else
-            text(0.95, (21/20)*max(n), sprintf('p = %0.3f', SVM.perf.DA_pp), 'HorizontalAlignment', 'Right', 'VerticalAlignment', 'Middle');
+            text(0.95, (21/20)*max(n), sprintf('mean p = %0.3f', mean(SVM.perf.DA_pp)), 'HorizontalAlignment', 'Right', 'VerticalAlignment', 'Middle');
         end;
         set(gca,'Box','On');
-        legend('permutation distribution', 'observed accuracy', 'Location', 'NorthWest');
+        legend('permutation distribution', 'observed accuracies', 'Location', 'NorthWest');
         xlabel('decoding accuracy', 'FontSize', 12);
         ylabel('number of permutations', 'FontSize', 12);
         title('permutation testing: decoding accuracy', 'FontSize', 16);
         % permutation testing (BA)
         subplot(2,2,4); hold on;
-        BAs = mean(SVM.perf.BA(1,:,:),3);
+        BAs = reshape(SVM.perf.BA(1,:,:),[1 size(SVM.perf.BA,3)*perm]);
+        BA1 = reshape(SVM.perf.BA(1,1,:),[1 size(SVM.perf.BA,3)]);
         dx  = 0.01;
         x   = [(0+dx/2):dx:(1-dx/2)];
         n   = hist(BAs, x);
+        if subs > 0, n = n./subs; end;
         bar(x, n, 'b');
-        plot(Acc(2), 0, 'xr', 'LineWidth', 2, 'MarkerSize', 10);
+        plot(BA1, 0, 'xr', 'LineWidth', 2, 'MarkerSize', 10);
         axis([0, 1, 0, (11/10)*max(n)]);
-        if SVM.perf.BA_pp < 0.001
-            text(0.95, (21/20)*max(n), 'p < 0.001', 'HorizontalAlignment', 'Right', 'VerticalAlignment', 'Middle');
+        if mean(SVM.perf.BA_pp) < 0.001
+            text(0.95, (21/20)*max(n), 'mean p < 0.001', 'HorizontalAlignment', 'Right', 'VerticalAlignment', 'Middle');
         else
-            text(0.95, (21/20)*max(n), sprintf('p = %0.3f', SVM.perf.BA_pp), 'HorizontalAlignment', 'Right', 'VerticalAlignment', 'Middle');
+            text(0.95, (21/20)*max(n), sprintf('mean p = %0.3f', mean(SVM.perf.BA_pp)), 'HorizontalAlignment', 'Right', 'VerticalAlignment', 'Middle');
         end;
         set(gca,'Box','On');
-        legend('permutation distribution', 'observed accuracy', 'Location', 'NorthWest');
+        legend('permutation distribution', 'observed accuracies', 'Location', 'NorthWest');
         xlabel('balanced accuracy', 'FontSize', 12);
         ylabel('number of permutations', 'FontSize', 12);
         title('permutation testing: balanced accuracy', 'FontSize', 16);

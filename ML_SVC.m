@@ -61,7 +61,7 @@ function SVC = ML_SVC(x, Y, CV, C, perm, subs)
 % E-Mail: Joram.Soch@DZNE.de
 % 
 % First edit: 06/07/2021, 14:27
-%  Last edit: 30/08/2021, 12:50
+%  Last edit: 06/10/2021, 09:36
 
 
 % Set defaults values
@@ -208,6 +208,9 @@ DA_CI = zeros(1,2,subs);
 BA_CI = zeros(1,2,subs);
 CA_CI = zeros(m,2,subs);
 CM    = zeros(m,m,subs);
+DA_pp = zeros(1,subs);
+BA_pp = zeros(1,subs);
+CA_pp = zeros(m,subs);
 for i = 1:subs
     for j = 1:perm              % decoding accuracy
         DA(1,j,i) = mean(xp(:,j,i)==xt(:,j,i));
@@ -221,11 +224,11 @@ for i = 1:subs
     [ph, CA_CI(:,:,i)] = binofit(uint16(round(CA(:,1,i).*nc)), nc, 0.1);
     for h = 1:m                 % confusion matrix
         CM(:,h,i) = mean( repmat(xp(xt(:,1,i)==h,1,i),[1 m])==repmat([1:m],[sum(xt(:,1,i)==h) 1]) )';
-    end;
-end;                            % permutation p-values
-DA_pp = sum(mean(DA,3)>=mean(DA(1,1,:),3))/perm;
-BA_pp = sum(mean(BA,3)>=mean(BA(1,1,:),3))/perm;
-CA_pp = sum(mean(CA,3)>=repmat(mean(CA(:,1,:),3),[1 perm]),2)/perm;
+    end;                        % permutation p-values
+    DA_pp(1,i) = sum( DA(1,:,i)>=DA(1,1,i) )/perm;
+    BA_pp(1,i) = sum( BA(1,:,i)>=BA(1,1,i) )/perm;
+    CA_pp(:,i) = sum( CA(:,:,i)>=repmat(CA(:,1,i),[1 perm]), 2)/perm;
+end;
 clear ne nc ph
 
 % Assemble SVC structure
@@ -250,7 +253,7 @@ SVC.perf.CA    = CA;
 SVC.perf.DA_CI = DA_CI;
 SVC.perf.BA_CI = BA_CI;
 SVC.perf.CA_CI = CA_CI;
+SVC.perf.CM    = CM;
 SVC.perf.DA_pp = DA_pp;
 SVC.perf.BA_pp = BA_pp;
 SVC.perf.CA_pp = CA_pp;
-SVC.perf.CM    = CM;
