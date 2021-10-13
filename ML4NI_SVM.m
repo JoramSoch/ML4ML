@@ -28,25 +28,7 @@ function ML4NI_SVM(SVM_dir, mask_img, data_imgs, c, x, X, preproc, options)
 % automatically generated as the intersection of all data images.
 % 
 % Preprocessing steps are carried in out in the order in which they are
-% specified. Each entry of the vector "preproc" codes one operation, e.g.
-%     preproc(1).op  = 'mc_X'
-%     preproc(1).cov = [1 2 3]
-%     preproc(2).op  = 'reg_Y'
-%     preproc(2).cov = [4 5 6]
-% would mean-center covariates 1-3, separately by class, and regress
-% covariates 4-6 out of the features, taking residuals for prediction.
-% 
-% The following operations are available as preprocessing steps:
-% - 'mc_Y'  : mean-center all features by subtracting the mean;
-% - 'std_Y' : standardize all features by dividing with the SD;
-% - 'mc_X'  : mean-center selected covariates by subtracting the mean;
-% - 'std_X' : standardize selected covariates by diving with the SD;
-% - 'mcc_X' : mean-center selected covariates, separately by class;
-% - 'stdc_X': standardize selected covariates, separately by class;
-% - 'reg_x' : regress selected covariates out of target values x;
-% - 'reg_Y' : regress selected covariates out of features matrix Y;
-% - 'add_X' : add selected covariates to the feature matrix Y.
-% Note: The first two operations will ignore the field "cov" of "preproc".
+% specified. For details, see "ML_preproc.m" or type "help ML_preproc".
 % 
 % The default configuration for preprocessing steps is that all features
 % are mean-centered and all covariates are added to the feature matrix, i.e.
@@ -69,7 +51,7 @@ function ML4NI_SVM(SVM_dir, mask_img, data_imgs, c, x, X, preproc, options)
 % E-Mail: Joram.Soch@DZNE.de
 % 
 % First edit: 27/07/2021, 07:21
-%  Last edit: 30/08/2021, 16:27
+%  Last edit: 13/10/2021, 16:00
 
 
 % Set default values (c, x, X)
@@ -99,7 +81,7 @@ if ~isempty(options)
     end;
     if ~isfield(options,'CV_mode')          % cross-validation mode
         if ~isempty(c), options.CV_mode = 'kfc';
-        else,           options.CV_mode = 'kf'; end;
+        else,           options.CV_mode = 'kf';  end;
     end;
     if ~isfield(options,'C'),    options.C    = 1; end; % SVM hyper-parameter
     if ~isfield(options,'k'),    options.k    = 10;end; % number of CV folds
@@ -150,37 +132,8 @@ end;
 
 % Preprocess features
 %-------------------------------------------------------------------------%
-Y = Y(:,m_ind);                 % restrict to in-mask voxels
-for j = 1:numel(preproc)
-    k = preproc(j).cov;         % covariate indices of current step
-    if strcmp(preproc(j).op,'mc_Y')
-        Y = Y - repmat(mean(Y),[N 1]);
-    elseif strcmp(preproc(j).op,'std_Y')
-        Y = Y./ repmat(std(Y),[N 1]);
-    elseif strcmp(preproc(j).op,'mc_X')
-        X(:,k) = X(:,k) - repmat(mean(X(:,k)),[N 1]);
-    elseif strcmp(preproc(j).op,'std_X')
-        X(:,k) = X(:,k)./ repmat(std(X(:,k)),[N 1]);
-    elseif strcmp(preproc(j).op,'mcc_X')
-        for h = 1:max(c)
-            X(c==h,k) = X(c==h,k) - repmat( mean(X(c==h,k)), [sum(c==h), 1] );
-        end;
-    elseif strcmp(preproc(j).op,'stdc_X')
-        for h = 1:max(c)
-            X(c==h,k) = X(c==h,k)./ repmat( std(X(c==h,k)), [sum(c==h), 1] );
-        end;
-    elseif strcmp(preproc(j).op,'reg_x') || strcmp(preproc(j).op,'reg_Y')
-        Xk = X(:,k);            % compute residual-forming matrix
-        Rk = eye(N) - Xk*(Xk'*Xk)^(-1)*Xk';
-        if strcmp(preproc(j).op,'reg_x')
-            x = Rk*x;
-        elseif strcmp(preproc(j).op,'reg_Y')
-            Y = Rk*Y;
-        end;
-    elseif strcmp(preproc(j).op,'add_X')
-        Y = [Y, X(:,k)];
-    end;
-end;
+ Y     = Y(:,m_ind);            % restrict to in-mask voxels
+[Y, x] = ML_preproc(Y, c, x, X, preproc);
 
 % Perform SVM analysis
 %-------------------------------------------------------------------------%
