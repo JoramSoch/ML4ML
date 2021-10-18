@@ -3,15 +3,17 @@ function [Y, x] = ML_preproc(Y, c, x, X, preproc)
 % Pre-Processing for Machine Learning Analysis
 % FORMAT [Y, x] = ML_preproc(Y, c, x, X, preproc)
 % 
-%     Y - an N x v matrix of feature values
-%     c - an N x 1 vector of class labels (1, 2, 3 etc.)
-%     x - an N x 1 vector of target values (real numbers)
-%     X - an N x p matrix of additional covariates (optional)
+%     Y - an N x v matrix of imaging feature values (optional)
+%     c - an N x 1 vector of class labels (1, 2, 3 etc.) for SVC
+%     x - an N x 1 vector of target values (real numbers) for SVR
+%     X - an N x p matrix of covariates (optional)
+% Note: Y or X must be provided, whereby X w/o Y can be used for SVMs
+% containing only non-imaging features. Both can be provided.
 % 
-%     Y - an N x w matrix of preprocessed features
+%     Y - an N x w matrix of preprocessed features (optionally contains X)
 %     x - an N x 1 vector of preprocessed targets (if applicable)
 % 
-% Preprocessing steps are carried in out in the order in which they are
+% Preprocessing steps are carried out in the order in which they are
 % specified. Each entry of the vector "preproc" codes one operation, e.g.
 %     preproc(1).op  = 'mcc_X'
 %     preproc(1).cov = [1 2 3]
@@ -31,7 +33,7 @@ function [Y, x] = ML_preproc(Y, c, x, X, preproc)
 % - 'reg_Y' : regress selected covariates out of feature matrix Y;
 % - 'add_X' : add selected covariates to the feature matrix Y.
 % Note: The first two operations will ignore the field "cov" of "preproc".
-% 
+%  
 % The default configuration for preprocessing steps is that all features
 % are mean-centered and all covariates are added to the feature matrix, i.e.
 %     preproc(1).op  = 'mc_Y'
@@ -59,7 +61,11 @@ end;
 
 % Preprocess features
 %-------------------------------------------------------------------------%
-N = size(Y,1);                  % number of observations
+if isempty(Y)
+    N = size(X,1);              % number of observations
+else
+    N = size(Y,1);             
+end
 for j = 1:numel(preproc)
     k = preproc(j).cov;         % covariate indices of current step
     switch preproc(j).op
@@ -68,16 +74,16 @@ for j = 1:numel(preproc)
         case 'std_Y'
             Y = Y./ repmat(std(Y),[N 1]);
         case 'mc_X'
-            X(:,k) = X(:,k) - repmat(mean(X(:,k)),[N 1]);
+            X(:,k) = X(:,k) - repmat(mean(X(:,k),'omitnan'),[N 1]);
         case 'std_X'
-            X(:,k) = X(:,k)./ repmat(std(X(:,k)),[N 1]);
+            X(:,k) = X(:,k)./ repmat(std(X(:,k),'omitnan'),[N 1]);
         case 'mcc_X'
             for h = 1:max(c)
-                X(c==h,k) = X(c==h,k) - repmat( mean(X(c==h,k)), [sum(c==h), 1] );
+                X(c==h,k) = X(c==h,k) - repmat( mean(X(c==h,k),'omitnan'), [sum(c==h), 1] );
             end;
         case 'stdc_X'
             for h = 1:max(c)
-                X(c==h,k) = X(c==h,k)./ repmat( std(X(c==h,k)), [sum(c==h), 1] );
+                X(c==h,k) = X(c==h,k)./ repmat( std(X(c==h,k),'omitnan'), [sum(c==h), 1] );
             end;
         case 'reg_x'
             Xk = X(:,k);        % compute residual-forming matrix
