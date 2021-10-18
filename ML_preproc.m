@@ -3,15 +3,29 @@ function [Y, x] = ML_preproc(Y, c, x, X, preproc)
 % Pre-Processing for Machine Learning Analysis
 % FORMAT [Y, x] = ML_preproc(Y, c, x, X, preproc)
 % 
-%     Y - an N x v matrix of imaging feature values (optional)
-%     c - an N x 1 vector of class labels (1, 2, 3 etc.) for SVC
-%     x - an N x 1 vector of target values (real numbers) for SVR
-%     X - an N x p matrix of covariates (optional)
-% Note: Y or X must be provided, whereby X w/o Y can be used for SVMs
-% containing only non-imaging features. Both can be provided.
+%     Y - an N x v matrix of feature values (optional)
+%     c - an N x 1 vector of class labels (1, 2, 3 etc.)
+%     x - an N x 1 vector of target values (real numbers)
+%     X - an N x p matrix of additional covariates (optional)
 % 
-%     Y - an N x w matrix of preprocessed features (optionally contains X)
+%     Y - an N x w matrix of preprocessed features (see below)
 %     x - an N x 1 vector of preprocessed targets (if applicable)
+% 
+% FORMAT [Y, x] = ML_preproc(Y, c, x, X, preproc) takes a feature matrix Y,
+% class vector c, targets vector x and covariate matrix X and preprocesses
+% the features Y and X according to steps defined in the struct "preproc".
+% 
+% For example, Y can be a matrix of imaging features (subject x voxel)
+% and X can be a matrix of non-imaging covariates (subject x predictor)
+% that is supposed to be added to the feature matrix. Usually, c is a
+% vector of class labels used for support vector classification (SVC) and
+% x is a vector of target values used for support vector regression (SVR).
+% 
+% Essentially, all of the input variables are optional. However, either
+% Y or X must be provided for steps that depend on sample size, e.g.
+% mean-centering and standardization. Note further that x is only outputed
+% when x is also inputed and regression out of targets is selected as a
+% preprocessed step.
 % 
 % Preprocessing steps are carried out in the order in which they are
 % specified. Each entry of the vector "preproc" codes one operation, e.g.
@@ -33,7 +47,7 @@ function [Y, x] = ML_preproc(Y, c, x, X, preproc)
 % - 'reg_Y' : regress selected covariates out of feature matrix Y;
 % - 'add_X' : add selected covariates to the feature matrix Y.
 % Note: The first two operations will ignore the field "cov" of "preproc".
-%  
+% 
 % The default configuration for preprocessing steps is that all features
 % are mean-centered and all covariates are added to the feature matrix, i.e.
 %     preproc(1).op  = 'mc_Y'
@@ -47,7 +61,7 @@ function [Y, x] = ML_preproc(Y, c, x, X, preproc)
 % E-Mail: Joram.Soch@DZNE.de
 % 
 % First edit: 27/07/2021, 07:21
-%  Last edit: 13/10/2021, 15:38
+%  Last edit: 18/10/2021, 15:52
 
 
 % Set default values
@@ -59,20 +73,27 @@ if isempty(preproc) || nargin < 5
     preproc(2).cov = [1:size(X,2)];
 end;
 
+% Get sample size
+%-------------------------------------------------------------------------%
+if ~isempty(Y)
+    N = size(Y,1);
+elseif ~isempty(X)
+    N = size(X,1);
+elseif ~isempty(c)
+    N = size(c,1);
+elseif ~isempty(x)
+    N = size(x,1);
+end;
+
 % Preprocess features
 %-------------------------------------------------------------------------%
-if isempty(Y)
-    N = size(X,1);              % number of observations
-else
-    N = size(Y,1);             
-end
 for j = 1:numel(preproc)
     k = preproc(j).cov;         % covariate indices of current step
     switch preproc(j).op
         case 'mc_Y'
-            Y = Y - repmat(mean(Y),[N 1]);
+            Y = Y - repmat(mean(Y,'omitnan'),[N 1]);
         case 'std_Y'
-            Y = Y./ repmat(std(Y),[N 1]);
+            Y = Y./ repmat(std(Y,'omitnan'),[N 1]);
         case 'mc_X'
             X(:,k) = X(:,k) - repmat(mean(X(:,k),'omitnan'),[N 1]);
         case 'std_X'
