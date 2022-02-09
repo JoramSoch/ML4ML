@@ -194,7 +194,11 @@ if strcmp(type,'perf')
         axis([0, numel(Acc)+1, 0, 1]);
         set(gca,'Box','On');
         set(gca,'XTick',[1:numel(Acc)],'XTickLabel',[{'DA', 'BA'}, cellstr(num2str([1:SVM.data.m]'))']);
-        legend('decoding accuracy', 'balanced accuracy', 'class accuracies', '90% confidence intervals', 'chance level', 'Location', 'South');
+        if SVM.data.m < 3
+            legend('decoding accuracy', 'balanced accuracy', 'class accuracies', '90% confidence intervals', 'chance level', 'Location', 'South');
+        else
+            legend('decoding accuracy', 'balanced accuracy', 'class accuracies', '90% confidence intervals', 'chance level', 'Location', 'North');
+        end;
         xlabel('measure', 'FontSize', 12);
         ylabel('accuracy', 'FontSize', 12);
         title('unpermuted data: predictive performance', 'FontSize', 16);
@@ -273,8 +277,12 @@ if strcmp(type,'perf')
         xlabel('measure', 'FontSize', 12);
         ylabel('precision', 'FontSize', 12);
         title('unpermuted data: predictive performance', 'FontSize', 16);
-        if Corr > 0
+        if Corr > 0.5
             text(2, Corr, sprintf('R^2 = %0.2f\nMAE = %1.2f\nMSE = %1.2f', SVM.perf.R2, SVM.perf.MAE, SVM.perf.MSE), 'HorizontalAlignment', 'Center', 'VerticalAlignment', 'Top');
+        elseif Corr > 0
+            text(2, 0, sprintf('R^2 = %0.2f\nMAE = %1.2f\nMSE = %1.2f', SVM.perf.R2, SVM.perf.MAE, SVM.perf.MSE), 'HorizontalAlignment', 'Center', 'VerticalAlignment', 'Bottom');
+        elseif Corr > -0.5
+            text(2, 0, sprintf('R^2 = %0.2f\nMAE = %1.2f\nMSE = %1.2f', SVM.perf.R2, SVM.perf.MAE, SVM.perf.MSE), 'HorizontalAlignment', 'Center', 'VerticalAlignment', 'Top');
         else
             text(2, Corr, sprintf('R^2 = %0.2f\nMAE = %1.2f\nMSE = %1.2f', SVM.perf.R2, SVM.perf.MAE, SVM.perf.MSE), 'HorizontalAlignment', 'Center', 'VerticalAlignment', 'Bottom');
         end;
