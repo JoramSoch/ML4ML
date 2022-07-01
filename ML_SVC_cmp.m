@@ -9,7 +9,7 @@ function [h, p, rr, stats] = ML_SVC_cmp(SVC1, SVC2, alpha)
 % 
 %     h     - an s x p matrix of hypotheses (s = subsamples,
 %     p     - an s x p matrix of p-values    p = permutations)
-%     rr    - a scalar, the relative risk of misclassification
+%     rr    - an s x p matrix of relative risks of misclassification
 %             (for first relative to second classifyer)
 %     stats - a structure specifying test statistics
 %     o chi2  - an s x p matrix of chi-square test statistics
@@ -30,7 +30,7 @@ function [h, p, rr, stats] = ML_SVC_cmp(SVC1, SVC2, alpha)
 % E-Mail: Joram.Soch@DZNE.de
 % 
 % First edit: 01/07/2022, 14:21
-%  Last edit: 01/07/2022, 16:02
+%  Last edit: 01/07/2022, 16:13
 
 
 % Set defaults values
@@ -47,6 +47,7 @@ if subs == 0, subs = 1; end;
 
 % Preallocate test results
 %-------------------------------------------------------------------------%
+rr         = zeros(subs,perm);
 stats.chi2 = zeros(subs,perm);
 
 % Perform statistical test
@@ -75,7 +76,7 @@ for i = 1:subs
         
         % Calculate relative risk
         %-----------------------------------------------------------------%
-        rr = (CM(1,1)+CM(1,2))/(CM(1,1)+CM(2,1));
+        rr(i,j) = (CM(1,1)+CM(1,2)) / (CM(1,1)+CM(2,1));
         
     end;
 end;
