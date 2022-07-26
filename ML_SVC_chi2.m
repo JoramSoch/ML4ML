@@ -1,25 +1,36 @@
-function [h, p, rr, stats] = ML_SVC_cmp(SVC1, SVC2, alpha)
+function [h, p, rr, stats] = ML_SVC_chi2(SVC1, SVC2, alpha)
 % _
 % McNemar's Test for Comparing two Support Vector Classifications
-% FORMAT [h, p, rr, stats] = ML_SVC_cmp(SVC1, SVC2, alpha)
+% FORMAT [h, p, rr, stats] = ML_SVC_chi2(SVC1, SVC2, alpha)
 % 
 %     SVC1  - a structure specifying the first SVC
 %     SVC2  - a structure specifying the second SVC
 %     alpha - a scalar, the significance level for McNemar's test
 % 
-%     h     - an s x p matrix of hypotheses (s = subsamples,
-%     p     - an s x p matrix of p-values    p = permutations)
-%     rr    - an s x p matrix of relative risks of misclassification
+%     h     - an subs x perm matrix of hypotheses (subs = subsamples,
+%     p     - an subs x perm matrix of p-values    perm = permutations)
+%     rr    - an subs x perm matrix of relative risks of misclassification
 %             (for first relative to second classifyer)
 %     stats - a structure specifying test statistics
-%     o chi2  - an s x p matrix of chi-square test statistics
-%     o df    - the number of degrees of freedom
-%     o cv    - the critical value of the test
+%     o chi2  - an subs x perm matrix of chi-square test statistics
+%     o df    - a scalar, the number of degrees of freedom
+%     o cv    - a scalar, the critical value of the test
 % 
-% FORMAT [h, p, rr, stats] = ML_SVC_cmp(SVC1, SVC2, alpha) performs McNemar's
+% FORMAT [h, p, rr, stats] = ML_SVC_chi2(SVC1, SVC2, alpha) performs McNemar's
 % test between support vector machines SVC1 and SVC2, using significance
 % level alpha, and returns hypothesis h (1: reject, 0: no reject), p-value
 % p, relative risk rr and test statistics stats.
+% 
+% McNemar's test for two classification algorithms [1] assesses the null
+% hypothesis that rates of misclassification are equal between classifiers.
+% Consequently, if the null hypothesis is rejected, one algorithms has
+% fewer misclassifications than the other.
+% 
+% If an SVC analysis has been run with (i) subsampling or (ii) permutations,
+% the test is performed for each subsample-permutation combination
+% indepently and results for all subsample-permutation combinations are
+% returned as matrices. Sample size, number of subsamples and permutations
+% must be equal between compared SVCs.
 % 
 % References:
 % [1] Dietterich TG (1998). Approximate Statistical Tests for Comparing
@@ -30,7 +41,7 @@ function [h, p, rr, stats] = ML_SVC_cmp(SVC1, SVC2, alpha)
 % E-Mail: Joram.Soch@DZNE.de
 % 
 % First edit: 01/07/2022, 14:21
-%  Last edit: 01/07/2022, 16:13
+%  Last edit: 26/07/2022, 12:03
 
 
 % Set defaults values
