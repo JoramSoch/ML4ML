@@ -75,7 +75,7 @@ c  = 1;                         % test for the mean difference
 stats.cv = tinv(1-alpha, stats.df);
 stats.R  = V;
 h = stats.tstat > stats.cv;
-p = 1- tcdf(stats.tstat, stats.df);
+p = 1 - tcdf(stats.tstat, stats.df);
 
 % Calculate confidence interval
 %-------------------------------------------------------------------------%
