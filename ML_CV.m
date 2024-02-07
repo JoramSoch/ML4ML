@@ -25,11 +25,11 @@ function CV = ML_CV(c, k, mode)
 % - 'looc' requires that all classes are equally large;
 %    if this is not fulfilled, mode is set to 'loo'.
 % 
-% Author: Joram Soch, DZNE Göttingen
+% Author: Joram Soch, DZNE G?ttingen
 % E-Mail: Joram.Soch@DZNE.de
 % 
 % First edit: 06/07/2021, 13:14
-%  Last edit: 02/08/2021, 15:02
+%  Last edit: 06/02/2024, 16:33
 
 
 % Set defaults values
@@ -52,6 +52,7 @@ end;
 
 % Create CV folds
 %-------------------------------------------------------------------------%
+rng(n*k);
 if k < 2                        % less than 2 CV folds
     k = 2;
     warning('ML_CV:few_folds', 'Number of CV folds is too small. Number of CV folds increased to k = %d!', k);
@@ -68,23 +69,39 @@ end;
 CV = zeros(n,k);
 % k-folds and leave-one-out cross-validation
 if strcmp(mode,'kf') || strcmp(mode,'loo')
-    nf = ceil(n/k);
+    nf = floor(n/k);
+    pf = n/k-floor(n/k);
     is = [1:n]';
+    ig = 0;
     for g = 1:k
-        i2 = is([((g-1)*nf+1):min([g*nf, n])]);
+        if rand > pf, ng = nf; else, ng = nf + 1; end;
+        if g < k
+            i2 = is([(ig+1):(ig+ng)]); % is([((g-1)*nf+1):min([g*nf, n])]);
+        else
+            i2 = is([(ig+1):n]);
+        end;
         i1 = setdiff(is,i2);
+        ig = ig + ng;
         CV(i1,g) = 1;           % training data points
         CV(i2,g) = 2;           % test data points
     end;
 end;
 % cross-validation on points per class
 if strcmp(mode,'kfc') || strcmp(mode,'looc')
-    nf = ceil(nc./k);
+    nf = floor(nc./k);
+    pf = nc./k-floor(nc./k);
     is = [1:n]';
+    ig = zeros(1,C);
     for g = 1:k
         i2 = [];
         for j = 1:C
-            i2 = [i2; ic{j}([((g-1)*nf(j)+1):min([g*nf(j), nc(j)])])];
+            if rand > pf(j), ngj = nf(j); else, ngj = nf(j) + 1; end;
+            if g < k
+                i2 = [i2; ic{j}([(ig(j)+1):(ig(j)+ngj)])]; % [i2; ic{j}([((g-1)*nf(j)+1):min([g*nf(j), nc(j)])])];
+            else
+                i2 = [i2; ic{j}([(ig(j)+1):nc(j)])];
+            end;
+            ig(j) = ig(j) + ngj;
         end;
         i1 = setdiff(is,i2);
         CV(i1,g) = 1;           % training data points

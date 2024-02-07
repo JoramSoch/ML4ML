@@ -57,11 +57,11 @@ function SVC = ML_SVC(x, Y, CV, C, perm, subs)
 % [1] Chang C, Lin CJ. LIBSVM - A Library for Support Vector Machines;
 %     URL: https://www.csie.ntu.edu.tw/~cjlin/libsvm/.
 % 
-% Author: Joram Soch, DZNE Göttingen
+% Author: Joram Soch, DZNE G?ttingen
 % E-Mail: Joram.Soch@DZNE.de
 % 
 % First edit: 06/07/2021, 14:27
-%  Last edit: 06/10/2021, 09:36
+%  Last edit: 06/02/2023, 15:52
 
 
 % Set defaults values
@@ -101,12 +101,8 @@ subs = max([0 subs]);
 if subs == 0                    % no subsampling: use all points
     is = [1:n]';
 else                            % subsampling: draw equal classes
-    if mod(min(N),10) == 0
-        spC = min(N) - 10;      % samples per class: round down to full 10's
-    else
-        spC = min(N) - mod(min(N),10);
-    end;
-    ic = cell(1,m);             % class indices: points in classes
+    spC = min(N);
+    ic  = cell(1,m);             % class indices: points in classes
     for j = 1:m
         ic{j} = find(x==j);
     end;
